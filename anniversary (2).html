@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Four Years of Us</title>
+
+<!--
+============================================================
+  HOW TO PERSONALIZE THIS CARD  (read me!)
+============================================================
+  1) ADD PHOTOS
+     Find any box that looks like a photo frame. Inside it there is
+     a line like:
+        <!-- PHOTO: replace this comment with an image - - >
+     Replace it with:
+        <img src="photos/your-photo.jpg" alt="">
+     Put your image files in a folder called "photos" next to this
+     file (or use any path you like). The photo auto-fits the frame.
+
+  2) EDIT TEXT
+     Anything wrapped like  [[ like this ]]  is a placeholder for you
+     to change. Search the file for "[[" to find them all.
+     Main ones: her name, the "official" date, captions, and the
+     long letter on the second-to-last page.
+
+  3) THE LONG LETTER
+     Look for the page titled "A letter for you" near the bottom.
+     There is a clearly marked spot to paste your paragraph.
+
+  Tip: open this file in any browser. Use the arrows, your keyboard
+  arrow keys, or swipe on a phone to move between pages.
+============================================================
+-->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Caveat:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+/* ============================================================
+   TOKENS
+   ============================================================ */
+:root{
+  --wine-1:#3a0a16;
+  --wine-2:#5d1224;
+  --wine-3:#7c1a30;
+  --wine-deep:#26060f;
+  --cream:#f6efe1;
+  --cream-2:#fbf6ec;
+  --paper-line:#e7d9c2;
+  --ink:#3f2a22;
+  --ink-soft:#6f5347;
+  --rose:#b8455f;
+  --rose-soft:#d98699;
+  --blush:#f6d7dc;
+  --gold:#c7a14e;
+  --gold-soft:#e4c87f;
+
+  --script:'Great Vibes', cursive;
+  --hand:'Caveat', cursive;
+  --serif:'Cormorant Garamond', Georgia, serif;
+
+  --ease:cubic-bezier(.22,.61,.36,1);
+}
+
+*{box-sizing:border-box;}
+html,body{height:100%;margin:0;}
+body{
+  font-family:var(--serif);
+  color:var(--ink);
+  background:var(--wine-deep);
+  overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ============================================================
+   BACKGROUND — deep wine glow + sparkle + vignette
+   ============================================================ */
+.stage{
+  position:fixed;
+  inset:0;
+  perspective:1600px;
+  background:
+    radial-gradient(120% 90% at 50% 8%, var(--wine-3) 0%, var(--wine-2) 38%, var(--wine-1) 66%, var(--wine-deep) 100%);
+  overflow:hidden;
+}
+.stage::before{ /* glitter dots */
+  content:"";
+  position:absolute; inset:-20%;
+  background-image:
+    radial-gradient(rgba(255,225,190,.55) 1px, transparent 1.4px),
+    radial-gradient(rgba(255,200,210,.35) 1px, transparent 1.4px);
+  background-size:42px 42px, 67px 67px;
+  background-position:0 0, 21px 30px;
+  opacity:.35;
+  animation:twinkle 7s ease-in-out infinite alternate;
+  pointer-events:none;
+}
+.stage::after{ /* vignette + soft top light */
+  content:"";
+  position:absolute; inset:0;
+  background:
+    radial-gradient(60% 40% at 50% 0%, rgba(255,220,190,.18), transparent 70%),
+    radial-gradient(120% 120% at 50% 50%, transparent 55%, rgba(0,0,0,.45) 100%);
+  pointer-events:none;
+}
+@keyframes twinkle{ from{opacity:.22} to{opacity:.45} }
+
+/* soft floating light blobs */
+.blob{position:absolute;border-radius:50%;filter:blur(60px);opacity:.5;pointer-events:none;mix-blend-mode:screen;}
+.blob.b1{width:340px;height:340px;left:-90px;top:-60px;background:rgba(216,134,153,.5);animation:drift1 18s ease-in-out infinite alternate;}
+.blob.b2{width:420px;height:420px;right:-120px;bottom:-120px;background:rgba(199,161,78,.35);animation:drift2 22s ease-in-out infinite alternate;}
+@keyframes drift1{to{transform:translate(40px,30px)}}
+@keyframes drift2{to{transform:translate(-50px,-25px)}}
+
+/* ambient hearts/petals layer */
+.ambient{position:fixed;inset:0;pointer-events:none;z-index:5;overflow:hidden;}
+.float-heart{position:absolute;bottom:-40px;font-size:18px;color:var(--rose-soft);opacity:0;will-change:transform,opacity;}
+
+/* ============================================================
+   PAGE SYSTEM + TRANSITIONS
+   ============================================================ */
+.book{position:fixed;inset:0;z-index:10;transform-style:preserve-3d;}
+.page{
+  position:absolute; inset:0;
+  display:flex;
+  padding:48px 22px 84px;
+  opacity:0; visibility:hidden;
+  transform:translateY(34px) scale(.975) rotateX(6deg);
+  transform-origin:50% 80%;
+  transition:opacity .7s var(--ease), transform .8s var(--ease), visibility 0s linear .8s;
+  overflow-y:auto;
+}
+/* auto-margin centering: centers when content fits, but keeps the top
+   reachable (scrollable) when content is taller than the screen */
+.page > *{margin:auto;}
+.page.active{
+  opacity:1; visibility:visible;
+  transform:none;
+  transition:opacity .8s var(--ease), transform .9s var(--ease), visibility 0s;
+  z-index:2;
+}
+.page.leaving{
+  opacity:0; visibility:visible;
+  transform:translateY(-30px) scale(.965) rotateX(-5deg);
+  transition:opacity .6s var(--ease), transform .7s var(--ease), visibility 0s linear .7s;
+  z-index:1;
+}
+
+/* staggered reveal of inner content */
+.page.active .reveal{animation:rise .9s var(--ease) both;}
+.page.active .reveal:nth-child(1){animation-delay:.10s}
+.page.active .reveal:nth-child(2){animation-delay:.20s}
+.page.active .reveal:nth-child(3){animation-delay:.30s}
+.page.active .reveal:nth-child(4){animation-delay:.40s}
+.page.active .reveal:nth-child(5){animation-delay:.50s}
+.page.active .reveal:nth-child(6){animation-delay:.60s}
+@keyframes rise{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+
+/* ============================================================
+   DOILY CARD
+   ============================================================ */
+.doily{
+  position:relative;
+  background:
+    radial-gradient(120% 120% at 30% 0%, var(--cream-2), var(--cream) 60%);
+  border-radius:18px;
+  padding:34px 30px;
+  max-width:560px; width:100%;
+  filter:drop-shadow(0 26px 34px rgba(0,0,0,.55)) drop-shadow(0 6px 14px rgba(0,0,0,.4));
+  /* concave lace scallops on every edge */
+  --s:13px;
+  -webkit-mask:
+    radial-gradient(var(--s) at 50% 0,   #0000 96%, #000) top    / calc(2*var(--s)) 52% repeat-x,
+    radial-gradient(var(--s) at 50% 100%,#0000 96%, #000) bottom / calc(2*var(--s)) 52% repeat-x,
+    radial-gradient(var(--s) at 0 50%,   #0000 96%, #000) left   / 52% calc(2*var(--s)) repeat-y,
+    radial-gradient(var(--s) at 100% 50%,#0000 96%, #000) right  / 52% calc(2*var(--s)) repeat-y;
+  mask:
+    radial-gradient(var(--s) at 50% 0,   #0000 96%, #000) top    / calc(2*var(--s)) 52% repeat-x,
+    radial-gradient(var(--s) at 50% 100%,#0000 96%, #000) bottom / calc(2*var(--s)) 52% repeat-x,
+    radial-gradient(var(--s) at 0 50%,   #0000 96%, #000) left   / 52% calc(2*var(--s)) repeat-y,
+    radial-gradient(var(--s) at 100% 50%,#0000 96%, #000) right  / 52% calc(2*var(--s)) repeat-y;
+  -webkit-mask-composite:source-over;
+  text-align:center;
+}
+/* delicate inner lace frame */
+.doily .frame{
+  position:absolute; inset:16px;
+  border:1.4px dotted rgba(184,69,95,.45);
+  border-radius:10px;
+  pointer-events:none;
+}
+.doily .frame::before{
+  content:""; position:absolute; inset:5px;
+  border:1px solid rgba(199,161,78,.35);
+  border-radius:7px;
+}
+.doily .content{position:relative;z-index:2;}
+
+/* corner flourishes */
+.corner{position:absolute;width:34px;height:34px;color:rgba(184,69,95,.5);z-index:3;}
+.corner.tl{top:8px;left:8px}
+.corner.tr{top:8px;right:8px;transform:scaleX(-1)}
+.corner.bl{bottom:8px;left:8px;transform:scaleY(-1)}
+.corner.br{bottom:8px;right:8px;transform:scale(-1)}
+
+/* ============================================================
+   TYPOGRAPHY HELPERS
+   ============================================================ */
+.script{font-family:var(--script);color:var(--rose);line-height:1;}
+.eyebrow{
+  font-family:var(--hand); font-size:1.15rem; letter-spacing:.08em;
+  color:var(--ink-soft); text-transform:lowercase;
+}
+.kicker{
+  font-family:var(--serif); font-style:italic; color:var(--ink-soft);
+  font-size:1.15rem; line-height:1.5;
+}
+.note{font-family:var(--hand);color:var(--ink-soft);font-size:1.3rem;line-height:1.4;}
+.tiny{font-family:var(--hand);color:var(--ink-soft);font-size:1rem;}
+
+.divider{display:flex;align-items:center;justify-content:center;gap:12px;color:var(--rose-soft);margin:18px 0;}
+.divider::before,.divider::after{content:"";height:1px;width:54px;background:linear-gradient(90deg,transparent,var(--gold-soft));}
+.divider::after{transform:scaleX(-1)}
+.heart-i{display:inline-block;color:var(--rose);}
+
+/* ============================================================
+   PHOTO FRAMES (placeholders)
+   ============================================================ */
+.photo{
+  position:relative;
+  background:linear-gradient(135deg,#efe6d4,#e7dcc6);
+  border-radius:4px;
+  overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+  color:#b9a98c;
+}
+.photo img{width:100%;height:100%;object-fit:cover;display:block;}
+.photo:not(:has(img))::after{
+  content:"♡  add photo";
+  font-family:var(--hand);
+  font-size:1.05rem;
+  color:#b29a86;
+  letter-spacing:.03em;
+}
+.photo::before{ /* subtle inner shadow */
+  content:"";position:absolute;inset:0;border-radius:4px;
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.05), inset 0 12px 30px -18px rgba(0,0,0,.4);
+  pointer-events:none;z-index:2;
+}
+
+/* polaroid */
+.polaroid{
+  background:#fffdf7;
+  padding:10px 10px 34px;
+  border-radius:3px;
+  box-shadow:0 14px 28px -14px rgba(0,0,0,.6);
+  position:relative;
+}
+.polaroid .photo{height:140px;width:140px;}
+.polaroid .cap{
+  font-family:var(--hand);font-size:1.05rem;color:#6a5346;
+  position:absolute;left:0;right:0;bottom:8px;text-align:center;
+}
+/* washi tape */
+.tape{
+  position:absolute;width:74px;height:24px;
+  background:rgba(216,134,153,.55);
+  box-shadow:0 2px 6px rgba(0,0,0,.15);
+  top:-10px;left:50%;transform:translateX(-50%) rotate(-3deg);
+  -webkit-mask:linear-gradient(90deg,transparent,#000 6px,#000 calc(100% - 6px),transparent);
+          mask:linear-gradient(90deg,transparent,#000 6px,#000 calc(100% - 6px),transparent);
+  z-index:4;
+}
+.tape.gold{background:rgba(199,161,78,.5)}
+.tape.tl{left:14px;transform:rotate(-24deg)}
+.tape.tr{left:auto;right:14px;transform:rotate(24deg)}
+
+/* ============================================================
+   PAGE 1 — ENVELOPE / SURPRISE
+   ============================================================ */
+.surprise{max-width:520px;text-align:center;}
+.kitty-card{
+  background:var(--cream);
+  border-radius:14px;
+  padding:30px 30px 26px;
+  box-shadow:0 26px 60px -26px rgba(0,0,0,.7);
+  position:relative;
+  display:inline-block;
+  text-align:center;
+}
+.kitty{width:170px;height:auto;margin:0 auto 4px;display:block;}
+.kitty-sign{
+  font-family:var(--hand);font-size:1.45rem;color:var(--ink);
+  background:#fff;border:1px solid #e8dcc6;border-radius:6px;
+  padding:10px 14px;margin-top:8px;line-height:1.25;
+  box-shadow:0 6px 16px -10px rgba(0,0,0,.5);
+}
+.open-btn{
+  margin-top:22px;
+  font-family:var(--hand);font-size:1.5rem;
+  color:#fff;background:linear-gradient(180deg,var(--rose),#9c3450);
+  border:none;border-radius:999px;
+  padding:13px 38px;cursor:pointer;
+  box-shadow:0 14px 30px -12px rgba(156,52,80,.9), 0 0 0 6px rgba(255,255,255,.06);
+  transition:transform .3s var(--ease), box-shadow .3s var(--ease);
+  position:relative;letter-spacing:.02em;
+}
+.open-btn:hover{transform:translateY(-3px) scale(1.03);}
+.open-btn:active{transform:translateY(0) scale(.98);}
+.open-hint{margin-top:12px;margin-bottom:4px;font-family:var(--hand);color:var(--ink-soft);font-size:1.1rem;opacity:.85;}
+.pulse{animation:pulse 2.4s ease-in-out infinite;}
+@keyframes pulse{0%,100%{transform:none}50%{transform:translateY(-4px)}}
+
+/* ============================================================
+   PAGE 2 — COVER (favourite photos cluster)
+   ============================================================ */
+.cover{max-width:620px;text-align:center;width:100%;}
+.cover .big{font-size:clamp(3.4rem,12vw,6rem);}
+.cover .sub{font-size:clamp(1.4rem,5vw,2rem);color:var(--rose);font-family:var(--script);margin-top:-6px;}
+.photo-cluster{
+  position:relative;height:300px;margin:6px auto 8px;max-width:520px;
+}
+.photo-cluster .polaroid{position:absolute;}
+.photo-cluster .p1{left:6%;top:30px;transform:rotate(-8deg);}
+.photo-cluster .p2{left:50%;top:0;transform:translateX(-50%) rotate(2deg);z-index:3;}
+.photo-cluster .p3{right:6%;top:38px;transform:rotate(9deg);}
+.photo-cluster .polaroid .photo{height:150px;width:150px;}
+.range{font-family:var(--serif);font-style:italic;color:var(--ink-soft);letter-spacing:.18em;font-size:1rem;text-transform:uppercase;}
+
+/* ============================================================
+   PAGE 4 — OFFICIAL DATE (calendar)
+   ============================================================ */
+.cal{
+  width:250px;margin:18px auto 10px;background:#fff;border-radius:12px;
+  border:1px solid #ecdfc8;box-shadow:0 16px 34px -16px rgba(0,0,0,.5);
+  overflow:hidden;
+}
+.cal-top{background:var(--rose);color:#fff;font-family:var(--hand);font-size:1.7rem;padding:8px 0;letter-spacing:.04em;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;padding:13px;}
+.cal-grid span{font-family:var(--serif);font-size:.96rem;color:#9c8a7a;height:26px;display:flex;align-items:center;justify-content:center;}
+.cal-grid .num{color:var(--ink);}
+.cal-grid .marked{position:relative;color:var(--rose);font-weight:700;}
+.cal-grid .marked::before{
+  content:"";position:absolute;
+  width:28px;height:28px;left:50%;top:50%;transform:translate(-50%,-50%) rotate(-6deg);
+  border:2.5px solid var(--rose);border-radius:50%;
+}
+.date-big{font-family:var(--script);font-size:3.3rem;color:var(--rose);margin-top:8px;}
+
+/* ============================================================
+   TIMELINE / OUR STORY  (photo journey, 2-2-1 grid)
+   ============================================================ */
+.journey{max-width:840px;width:100%;text-align:center;}
+.journey-track{
+  display:grid;
+  grid-template-columns:repeat(2, auto);
+  justify-content:center;
+  align-items:start;
+  gap:30px 190px;
+  margin-top:26px;
+}
+.step{position:relative;display:flex;flex-direction:column;align-items:center;}
+.step:last-child{grid-column:1 / -1;justify-self:center;}   /* 5th centered -> 2-2-1 */
+.journey .polaroid{padding:13px 13px 32px;}
+.step .polaroid{transform:rotate(var(--r,0deg));}
+.step:nth-child(odd) .polaroid{--r:-3deg}
+.step:nth-child(even) .polaroid{--r:3deg}
+.step .polaroid .photo{width:248px;height:186px;}
+.step-label{
+  font-family:var(--serif);font-style:italic;letter-spacing:.14em;text-transform:uppercase;
+  font-size:1rem;color:rgba(246,215,220,.92);margin-bottom:13px;
+}
+.step-cap{
+  font-family:var(--hand);font-size:1.6rem;color:#fff;margin:14px 0 0;line-height:1.25;max-width:280px;
+  text-shadow:0 2px 12px rgba(0,0,0,.4);
+}
+.step-note{display:block;font-size:1.15rem;color:#f3c6cf;margin-top:2px;}
+
+/* medium screens: scale the frames + spacing down so they still fit */
+@media(max-width:880px){
+  .journey-track{gap:24px 90px;}
+  .step .polaroid .photo{width:196px;height:147px;}
+  .step-cap{font-size:1.45rem;max-width:240px;}
+}
+
+/* ============================================================
+   PAGE 6 — GALLERY WALL
+   ============================================================ */
+.gallery{max-width:640px;width:100%;text-align:center;}
+.wall{display:flex;flex-wrap:wrap;gap:18px 16px;justify-content:center;margin-top:10px;}
+.wall .polaroid{transform:rotate(var(--r,0deg));}
+.wall .polaroid:nth-child(1){--r:-6deg}
+.wall .polaroid:nth-child(2){--r:4deg}
+.wall .polaroid:nth-child(3){--r:-3deg}
+.wall .polaroid:nth-child(4){--r:6deg}
+.wall .polaroid:nth-child(5){--r:-5deg}
+.wall .polaroid:nth-child(6){--r:3deg}
+
+/* ============================================================
+   PAGE 7 — REASONS I LOVE YOU
+   ============================================================ */
+.reasons{list-style:none;padding:0;margin:12px auto 0;max-width:430px;text-align:left;}
+.reasons li{
+  font-family:var(--serif);font-size:1.18rem;color:var(--ink);
+  padding:9px 0 9px 38px;position:relative;line-height:1.45;
+  border-bottom:1px dashed rgba(184,69,95,.25);
+}
+.reasons li::before{content:"♡";position:absolute;left:6px;top:8px;color:var(--rose);font-size:1.1rem;}
+.reasons li:last-child{border-bottom:none;}
+
+/* ============================================================
+   PAGE 8 — FEATURED "US"
+   ============================================================ */
+.featured{max-width:560px;text-align:center;width:100%;}
+.feature-frame{
+  background:#fffdf7;padding:14px 14px 44px;border-radius:4px;margin:8px auto 0;max-width:380px;
+  box-shadow:0 22px 44px -22px rgba(0,0,0,.7);position:relative;transform:rotate(-1.5deg);
+}
+.feature-frame .photo{height:260px;width:100%;}
+.feature-frame .cap{font-family:var(--hand);font-size:1.4rem;color:#6a5346;position:absolute;left:0;right:0;bottom:10px;}
+
+/* ============================================================
+   PAGE 9 — LETTER
+   ============================================================ */
+.letter{max-width:560px;width:100%;}
+.letter .paper{
+  background:
+    repeating-linear-gradient(transparent, transparent 33px, rgba(184,69,95,.12) 34px),
+    var(--cream-2);
+  border-radius:8px;padding:30px 30px 36px;text-align:left;
+  box-shadow:0 26px 56px -26px rgba(0,0,0,.7);
+  position:relative;
+}
+.letter .paper::before{content:"";position:absolute;left:42px;top:0;bottom:0;width:1px;background:rgba(184,69,95,.3);}
+.letter h3{font-family:var(--script);color:var(--rose);font-size:2.4rem;margin:0 0 6px;text-align:center;}
+.letter-body{
+  font-family:var(--serif);font-size:1.18rem;line-height:34px;color:var(--ink);
+  font-style:italic;white-space:pre-line;min-height:160px;
+}
+.letter .sign{font-family:var(--script);color:var(--rose);font-size:2rem;text-align:right;margin-top:14px;}
+
+/* ============================================================
+   PAGE 10 — CLOSING
+   ============================================================ */
+.closing{max-width:560px;text-align:center;}
+.bouquet{margin:6px auto 2px;width:120px;height:120px;}
+.restart{
+  margin-top:24px;font-family:var(--hand);font-size:1.25rem;color:var(--rose);
+  background:transparent;border:1.5px solid var(--rose);border-radius:999px;
+  padding:9px 26px;cursor:pointer;transition:all .3s var(--ease);
+}
+.restart:hover{background:var(--rose);color:#fff;}
+
+/* ============================================================
+   NAV
+   ============================================================ */
+.nav-arrow{
+  position:fixed;top:50%;transform:translateY(-50%);
+  width:52px;height:52px;border-radius:50%;z-index:30;
+  background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);
+  color:#fff;cursor:pointer;backdrop-filter:blur(6px);
+  display:flex;align-items:center;justify-content:center;
+  transition:all .3s var(--ease);
+}
+.nav-arrow svg{width:22px;height:22px;}
+.nav-arrow:hover{background:rgba(255,255,255,.22);transform:translateY(-50%) scale(1.08);}
+.nav-arrow.disabled{opacity:0;pointer-events:none;}
+.nav-arrow.prev{left:16px}
+.nav-arrow.next{right:16px}
+
+.dots{
+  position:fixed;left:50%;bottom:22px;transform:translateX(-50%);
+  display:flex;gap:9px;z-index:30;
+}
+.dots button{
+  width:9px;height:9px;border-radius:50%;padding:0;border:none;cursor:pointer;
+  background:rgba(255,255,255,.3);transition:all .3s var(--ease);
+}
+.dots button.on{background:var(--rose-soft);transform:scale(1.35);box-shadow:0 0 10px var(--rose-soft);}
+
+.progress-hint{
+  position:fixed;bottom:46px;left:50%;transform:translateX(-50%);
+  font-family:var(--hand);color:rgba(255,255,255,.55);font-size:1rem;z-index:30;
+  white-space:nowrap;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media(max-width:560px){
+  .doily{padding:30px 18px;}
+  .photo-cluster{height:270px;}
+  .photo-cluster .polaroid .photo{height:120px;width:120px;}
+  .polaroid .photo{height:120px;width:120px;}
+  .step .polaroid .photo{width:120px;height:90px;}
+  .journey-track{gap:14px 16px;}
+  .step-cap{font-size:1.15rem;max-width:150px;}
+  .step-label{font-size:.76rem;}
+  .nav-arrow{width:44px;height:44px;}
+  .nav-arrow.prev{left:8px}.nav-arrow.next{right:8px}
+  .progress-hint{display:none;}
+}
+
+@media(prefers-reduced-motion:reduce){
+  *{animation:none !important;}
+  .page,.page.active,.page.leaving{transition:opacity .4s ease, visibility 0s;}
+  .page{transform:none;}
+  .page.active{transform:none;}
+  .page.leaving{transform:none;}
+}
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
+</div>
+<div class="ambient" id="ambient"></div>
+
+<div class="book" id="book">
+
+  <!-- ========== PAGE 1 : SURPRISE ========== -->
+  <section class="page active" data-page="0">
+    <div class="surprise">
+      <div class="kitty-card reveal">
+        <!-- cute cat drawn in SVG so no image file is needed -->
+        <svg class="kitty" viewBox="0 0 200 170" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <g fill="none" stroke="#3f2a22" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
+            <path d="M58 56 L44 26 L74 44" fill="#fff"/>
+            <path d="M142 56 L156 26 L126 44" fill="#fff"/>
+            <path d="M50 30 L42 16 L60 30" fill="#f6b07a" stroke="#f6b07a"/>
+            <path d="M40 70 C40 40 160 40 160 70 C168 96 150 120 100 120 C50 120 32 96 40 70 Z" fill="#fff"/>
+            <circle cx="78" cy="78" r="4.5" fill="#3f2a22" stroke="none"/>
+            <circle cx="122" cy="78" r="4.5" fill="#3f2a22" stroke="none"/>
+            <path d="M94 86 q6 6 12 0" />
+            <circle cx="64" cy="90" r="6" fill="#f6c1cf" stroke="none"/>
+            <circle cx="136" cy="90" r="6" fill="#f6c1cf" stroke="none"/>
+          </g>
+        </svg>
+        <div class="kitty-sign">i've made<br>something<br>for you</div>
+        <button class="open-btn pulse" id="openBtn">open me &#10084;</button>
+        <p class="open-hint">a little surprise, just for you</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== PAGE 2 : COVER ========== -->
+  <section class="page" data-page="1">
+    <div class="cover">
+      <p class="eyebrow reveal">for Ishani &#10084;</p>
+      <div class="reveal">
+        <div class="script big">Four Years</div>
+        <div class="sub">of us</div>
+      </div>
+      <div class="photo-cluster reveal">
+        <div class="polaroid p1"><span class="tape"></span><div class="photo"><img src="photos/WhatsApp Image 2026-06-27 at 23.32.07.jpeg" alt=""></div></div>
+        <div class="polaroid p2"><span class="tape gold"></span><div class="photo"><img src="photos/WhatsApp Image 2026-06-27 at 23.32.49.jpeg" alt=""></div></div>
+        <div class="polaroid p3"><span class="tape"></span><div class="photo"><img src="photos/WhatsApp Image 2026-06-27 at 23.34.43.jpeg" alt=""></div></div>
+      </div>
+      <p class="range reveal">2022 &nbsp;&#8212;&nbsp; 2026</p>
+    </div>
+  </section>
+
+  <!-- ========== PAGE 3 : THE DAY IT BECAME OFFICIAL ========== -->
+  <section class="page" data-page="2">
+    <div class="doily reveal">
+      <div class="frame"></div>
+      <div class="content">
+        <p class="eyebrow">the day it became</p>
+        <div class="script" style="font-size:clamp(2.8rem,10vw,4rem);margin-top:-4px">official</div>
+        <div class="cal">
+          <div class="cal-top">July</div>
+          <div class="cal-grid">
+            <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
+            <span></span><span></span><span></span><span></span><span></span><span class="num marked">1</span><span class="num">2</span>
+            <span class="num">3</span><span class="num">4</span><span class="num">5</span><span class="num">6</span><span class="num">7</span><span class="num">8</span><span class="num">9</span>
+            <span class="num">10</span><span class="num">11</span><span class="num">12</span><span class="num">13</span><span class="num">14</span><span class="num">15</span><span class="num">16</span>
+            <span class="num">17</span><span class="num">18</span><span class="num">19</span><span class="num">20</span><span class="num">21</span><span class="num">22</span><span class="num">23</span>
+            <span class="num">24</span><span class="num">25</span><span class="num">26</span><span class="num">27</span><span class="num">28</span><span class="num">29</span><span class="num">30</span>
+            <span class="num">31</span>
+          </div>
+        </div>
+        <div class="date-big">01.07.2022</div>
+        <p class="note" style="margin-top:8px">the day i got the luckiest &#10084;</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== PAGE 4 : OUR STORY / TIMELINE ========== -->
+  <section class="page" data-page="3">
+    <div class="journey">
+      <p class="eyebrow reveal" style="color:#f3c6cf;margin:0 0 -2px;font-size:1.3rem">a little</p>
+      <div class="script reveal" style="font-size:clamp(2.6rem,8vw,3.8rem);color:#fff;text-shadow:0 6px 20px rgba(0,0,0,.4)">timeline of us</div>
+      <div class="journey-track reveal">
+
+        <div class="step">
+          <span class="step-label">where it all began</span>
+          <div class="polaroid"><span class="tape"></span><div class="photo"><img src="photos/EeIfP6mUcAARxW6.jpg" alt=""></div></div>
+          <p class="step-cap">BITS Goa</p>
+        </div>
+
+        <div class="step">
+          <span class="step-label">our first date</span>
+          <div class="polaroid"><span class="tape gold"></span><div class="photo"><img src="photos/pentagon.jpeg" alt=""></div></div>
+          <p class="step-cap">The Pentagon (Couldnt find the actual pics of us &#128514;)</p>
+        </div>
+
+        <div class="step">
+          <span class="step-label">our first trip</span>
+          <div class="polaroid"><span class="tape"></span><div class="photo"><img src="photos/mumbai.jpeg" alt=""></div></div>
+          <p class="step-cap">Mumbai <span class="step-note">(not exactly but i travelled to see u &#128514;)</span></p>
+        </div>
+
+        <div class="step">
+          <span class="step-label">first place we &#8230;</span>
+          <div class="polaroid"><span class="tape gold"></span><div class="photo"><img src="photos/nicepic.jpeg" alt=""></div></div>
+          <p class="step-cap">NAB</p>
+        </div>
+
+        <div class="step">
+          <span class="step-label">today</span>
+          <div class="polaroid"><span class="tape"></span><div class="photo"><img src="photos/WhatsApp Image 2026-06-28 at 00.09.06.jpeg" alt=""></div></div>
+          <p class="step-cap">Four years, and still my favourite person.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== PAGE 5 : REASONS I LOVE YOU ========== -->
+  <section class="page" data-page="4">
+    <div class="doily reveal" style="max-width:500px">
+      <div class="frame"></div>
+      <div class="content">
+        <div class="script" style="font-size:clamp(2.4rem,9vw,3.4rem)">reasons i love you</div>
+        <p class="tiny" style="margin-top:2px">(a few of the endless ones)</p>
+        <ul class="reasons">
+          <li>how you make ordinary weekends feel special</li>
+          <li>i can be the most retarded person around you</li>
+          <li>how mature you are</li>
+          <li>how brain rotted and retarded u are</li>
+          <li>the way you laugh at your own jokes</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== PAGE 8 : FEATURED US ========== -->
+  <section class="page" data-page="5">
+    <div class="featured">
+      <div class="script reveal" style="font-size:clamp(2.8rem,10vw,4rem);color:#fff;text-shadow:0 6px 20px rgba(0,0,0,.45)">just you &amp; me</div>
+      <div class="feature-frame reveal">
+        <span class="tape tl"></span><span class="tape tr gold"></span>
+        <div class="photo"><img src="photos/WhatsApp Image 2026-06-27 at 23.34.02.jpeg" alt=""></div>
+        <div class="cap">[[ my favourite photo of us ]]</div>
+      </div>
+      <p class="note reveal" style="color:#f3c6cf;margin-top:14px">my favourite person, in my favourite frame.</p>
+    </div>
+  </section>
+
+  <!-- ========== PAGE 9 : THE LETTER ========== -->
+  <section class="page" data-page="6">
+    <div class="letter">
+      <div class="paper reveal">
+        <h3>A letter for you</h3>
+        <!--
+          ╔══════════════════════════════════════════════════╗
+          ║  PASTE YOUR LONG PARAGRAPH BELOW.                 ║
+          ║  Just replace the placeholder text inside the     ║
+          ║  <p class="letter-body"> ... </p> tag.            ║
+          ║  Line breaks are kept automatically.              ║
+          ╚══════════════════════════════════════════════════╝
+        -->
+        <p class="letter-body">Dear Ishani,
+
+It's been a while since we've written to each other. In fact, I don't think we have since, like, second year of college, and I thought this time I would.
+
+I know we keep saying this, but how has it already been four years bro. We've both changed so much, from clueless college kids to working adults, but the one thing that's stayed constant in our lives has been us, and I love that.
+
+I miss you every second we're not together, and I know, without a doubt, that I want to spend the rest of my life with you. Four years feels like nothing compared to all the years I still want to spend by your side.
+
+I'm literally texting you while writing this, and I'm so excited to finally meet and properly get to know your brother (hopefully he likes me &#129310;). I know you'll always be mad at me for not introducing you to my family yet, but I promise it will happen. I know you think I don't want to, but I'm just slowly building up the courage.
+
+I hope you like the gift too lmao. You can finally put it up on that hall of boyfriend gifts in your house that is actually from me. 
+
+Anyway, happy anniversary babe. Here's to a hundred more years together.
+
+I love you &#10084;&#65039;</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== PAGE 10 : CLOSING ========== -->
+  <section class="page" data-page="7">
+    <div class="closing">
+      <svg class="bouquet reveal" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <g stroke="#6f8f5a" stroke-width="2" fill="none">
+          <path d="M60 110 C56 80 48 60 40 44"/><path d="M60 110 C60 80 60 58 60 40"/><path d="M60 110 C64 80 72 60 80 44"/>
+        </g>
+        <g fill="#fff" stroke="#e7d9c2" stroke-width="1.5">
+          <circle cx="40" cy="40" r="13"/><circle cx="60" cy="34" r="14"/><circle cx="80" cy="40" r="13"/>
+          <circle cx="50" cy="52" r="11"/><circle cx="72" cy="52" r="11"/>
+        </g>
+        <g fill="#f6d7dc"><circle cx="40" cy="40" r="4"/><circle cx="60" cy="34" r="4"/><circle cx="80" cy="40" r="4"/><circle cx="50" cy="52" r="3.5"/><circle cx="72" cy="52" r="3.5"/></g>
+        <path d="M52 110 h16 l-3 8 h-10 z" fill="#d98699"/>
+      </svg>
+      <p class="eyebrow reveal" style="color:#f3c6cf;margin-bottom:2px;font-size:1.25rem">yours forever</p>
+      <div class="script reveal" style="font-size:clamp(3.2rem,13vw,6rem);color:#fff;line-height:1;text-shadow:0 8px 26px rgba(0,0,0,.5)">Happy 4th</div>
+      <div class="script reveal" style="font-size:clamp(2.4rem,10vw,4.8rem);color:#fff;line-height:1.05;margin-top:-6px;text-shadow:0 8px 26px rgba(0,0,0,.5)">Anniversary</div>
+      <p class="note reveal" style="color:#f6d7dc;font-size:1.9rem;margin-top:10px">Ishani &#10084;</p>
+      <button class="restart reveal" id="restartBtn">read it again &#8635;</button>
+    </div>
+  </section>
+
+</div>
+
+<!-- NAV -->
+<button class="nav-arrow prev disabled" id="prevBtn" aria-label="Previous page">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+</button>
+<button class="nav-arrow next" id="nextBtn" aria-label="Next page">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+</button>
+
+<div class="dots" id="dots"></div>
+<div class="progress-hint" id="hint">use the arrows, swipe, or &#8592; &#8594; keys</div>
+
+<script>
+(function(){
+  const pages = Array.from(document.querySelectorAll('.page'));
+  const total = pages.length;
+  let current = 0;
+  let animating = false;
+
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const dotsWrap = document.getElementById('dots');
+  const hint = document.getElementById('hint');
+
+  // build dots
+  pages.forEach((_,i)=>{
+    const b = document.createElement('button');
+    b.setAttribute('aria-label','Go to page '+(i+1));
+    if(i===0) b.classList.add('on');
+    b.addEventListener('click',()=>goTo(i));
+    dotsWrap.appendChild(b);
+  });
+  const dots = Array.from(dotsWrap.children);
+
+  function updateChrome(){
+    prevBtn.classList.toggle('disabled', current===0);
+    nextBtn.classList.toggle('disabled', current===total-1);
+    dots.forEach((d,i)=>d.classList.toggle('on', i===current));
+    if(hint) hint.style.opacity = current===0 ? '0' : '1';
+  }
+
+  function goTo(index){
+    if(animating || index===current || index<0 || index>=total) return;
+    animating = true;
+    const out = pages[current];
+    const incoming = pages[index];
+    out.classList.add('leaving');
+    out.classList.remove('active');
+    incoming.classList.add('active');
+    // restart inner reveal animations
+    incoming.querySelectorAll('.reveal').forEach(el=>{
+      el.style.animation='none'; void el.offsetWidth; el.style.animation='';
+    });
+    current = index;
+    updateChrome();
+    setTimeout(()=>{ out.classList.remove('leaving'); animating=false; }, 850);
+  }
+  function next(){ goTo(current+1); }
+  function prev(){ goTo(current-1); }
+
+  nextBtn.addEventListener('click',next);
+  prevBtn.addEventListener('click',prev);
+  document.getElementById('openBtn').addEventListener('click',()=>{ burst(); next(); });
+  document.getElementById('restartBtn').addEventListener('click',()=>goTo(0));
+
+  // keyboard
+  window.addEventListener('keydown',e=>{
+    if(e.key==='ArrowRight'||e.key==='PageDown'){ next(); }
+    if(e.key==='ArrowLeft'||e.key==='PageUp'){ prev(); }
+  });
+
+  // swipe
+  let sx=0, sy=0;
+  window.addEventListener('touchstart',e=>{ sx=e.touches[0].clientX; sy=e.touches[0].clientY; },{passive:true});
+  window.addEventListener('touchend',e=>{
+    const dx=e.changedTouches[0].clientX-sx;
+    const dy=e.changedTouches[0].clientY-sy;
+    if(Math.abs(dx)>50 && Math.abs(dx)>Math.abs(dy)){ dx<0 ? next() : prev(); }
+  },{passive:true});
+
+  updateChrome();
+
+  /* ---------- ambient floating hearts ---------- */
+  const ambient = document.getElementById('ambient');
+  const glyphs = ['\u2764','\u2765','\u2766','\u273f'];
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function spawnHeart(){
+    if(reduce) return;
+    const h = document.createElement('span');
+    h.className='float-heart';
+    h.textContent = glyphs[Math.floor(Math.random()*glyphs.length)];
+    const size = 12 + Math.random()*18;
+    h.style.left = Math.random()*100 + 'vw';
+    h.style.fontSize = size + 'px';
+    h.style.color = Math.random()>.5 ? 'rgba(217,134,153,.8)' : 'rgba(246,215,220,.8)';
+    const dur = 7 + Math.random()*6;
+    const drift = (Math.random()*120-60);
+    ambient.appendChild(h);
+    h.animate([
+      {transform:'translate(0,0) rotate(0deg)', opacity:0},
+      {opacity:.9, offset:.1},
+      {opacity:.9, offset:.8},
+      {transform:`translate(${drift}px, -102vh) rotate(${drift}deg)`, opacity:0}
+    ], {duration:dur*1000, easing:'ease-out'});
+    setTimeout(()=>h.remove(), dur*1000+200);
+  }
+  if(!reduce){ setInterval(spawnHeart, 1100); for(let i=0;i<4;i++) setTimeout(spawnHeart, i*500); }
+
+  /* ---------- burst of hearts on "open" ---------- */
+  function burst(){
+    if(reduce) return;
+    for(let i=0;i<22;i++){
+      const h=document.createElement('span');
+      h.className='float-heart';
+      h.textContent='\u2764';
+      h.style.left='50vw'; h.style.bottom='50vh';
+      h.style.fontSize=(14+Math.random()*22)+'px';
+      h.style.color = Math.random()>.5 ? '#d98699' : '#f6d7dc';
+      ambient.appendChild(h);
+      const ang=Math.random()*Math.PI*2, dist=120+Math.random()*220;
+      h.animate([
+        {transform:'translate(-50%,-50%) scale(.4)', opacity:1},
+        {transform:`translate(${Math.cos(ang)*dist-50}%, ${Math.sin(ang)*dist-50}%) scale(1)`, opacity:0}
+      ],{duration:1100+Math.random()*500, easing:'cubic-bezier(.22,.61,.36,1)'});
+      setTimeout(()=>h.remove(),1700);
+    }
+  }
+})();
+</script>
+</body>
+</html>

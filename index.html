@@ -799,9 +799,19 @@ document.getElementById('openBtn').addEventListener('click', () => {
     next();
 });
 
+let musicPlayPromise = null;
 musicBtn.addEventListener('click', () => {
-    if(music.paused){ music.play().then(()=>musicBtn.classList.remove('paused')).catch(err=>console.warn('blocked:', err)); }
-    else { music.pause(); musicBtn.classList.add('paused'); }
+    if(music.paused){
+        musicPlayPromise = music.play();
+        musicPlayPromise.then(()=>musicBtn.classList.remove('paused')).catch(err=>console.warn('blocked:', err));
+    } else {
+        if(musicPlayPromise){
+            musicPlayPromise.then(()=>{ music.pause(); musicBtn.classList.add('paused'); }).catch(()=>{});
+        } else {
+            music.pause();
+            musicBtn.classList.add('paused');
+        }
+    }
 });
   document.getElementById('restartBtn').addEventListener('click',()=>goTo(0));
 

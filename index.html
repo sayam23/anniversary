@@ -793,13 +793,13 @@ const music = document.getElementById("bgMusic");
 const musicBtn = document.getElementById("musicBtn");
 music.volume = 0.55;
 
+let musicPlayPromise = null;
 document.getElementById('openBtn').addEventListener('click', () => {
-    music.play().then(()=>musicBtn.classList.remove('paused')).catch(err=>console.warn('blocked:', err));
+    musicPlayPromise = music.play();
+    musicPlayPromise.then(()=>musicBtn.classList.remove('paused')).catch(err=>console.warn('blocked:', err));
     burst();
     next();
 });
-
-let musicPlayPromise = null;
 musicBtn.addEventListener('click', () => {
     if(music.paused){
         musicPlayPromise = music.play();

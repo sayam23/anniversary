@@ -479,7 +479,13 @@ body{
   background:rgba(255,255,255,.3);transition:all .3s var(--ease);
 }
 .dots button.on{background:var(--rose-soft);transform:scale(1.35);box-shadow:0 0 10px var(--rose-soft);}
-
+.music-btn{position:fixed;top:18px;right:18px;z-index:30;width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);color:#fff;cursor:pointer;backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;}
+.music-btn .bars{display:flex;align-items:flex-end;gap:2.5px;height:16px;}
+.music-btn .bars span{width:3px;background:#fff;border-radius:2px;animation:eq 1s ease-in-out infinite;}
+.music-btn .bars span:nth-child(2){animation-delay:.2s}
+.music-btn .bars span:nth-child(3){animation-delay:.4s}
+.music-btn.paused .bars span{animation-play-state:paused;height:4px;}
+@keyframes eq{0%,100%{height:5px}50%{height:15px}}
 .progress-hint{
   position:fixed;bottom:46px;left:50%;transform:translateX(-50%);
   font-family:var(--hand);color:rgba(255,255,255,.55);font-size:1rem;z-index:30;
@@ -516,6 +522,9 @@ body{
 <audio id="bgMusic" loop>
     <source src="photos/song.mp3" type="audio/mpeg">
 </audio>
+  <button class="music-btn paused" id="musicBtn" aria-label="Toggle music">
+  <span class="bars"><span></span><span></span><span></span></span>
+</button>
 <div class="stage">
   <div class="blob b1"></div>
   <div class="blob b2"></div>
@@ -780,12 +789,19 @@ I love you &#10084;&#65039;</p>
 
   nextBtn.addEventListener('click',next);
   prevBtn.addEventListener('click',prev);
- const music = document.getElementById("bgMusic");
+const music = document.getElementById("bgMusic");
+const musicBtn = document.getElementById("musicBtn");
+music.volume = 0.55;
 
 document.getElementById('openBtn').addEventListener('click', () => {
-    music.play();   // Start music
+    music.play().then(()=>musicBtn.classList.remove('paused')).catch(err=>console.warn('blocked:', err));
     burst();
     next();
+});
+
+musicBtn.addEventListener('click', () => {
+    if(music.paused){ music.play().then(()=>musicBtn.classList.remove('paused')).catch(err=>console.warn('blocked:', err)); }
+    else { music.pause(); musicBtn.classList.add('paused'); }
 });
   document.getElementById('restartBtn').addEventListener('click',()=>goTo(0));
 
